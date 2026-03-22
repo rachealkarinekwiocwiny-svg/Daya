@@ -1,0 +1,121 @@
+import React, { useEffect, useRef } from 'react';
+import { View, Text, Animated, StyleSheet, StatusBar, Dimensions } from 'react-native';
+import { colors, fonts, shadow } from '../theme';
+import BloomLogo from '../components/BloomLogo';
+
+const { width, height } = Dimensions.get('window');
+
+export default function SplashScreen({ navigation }) {
+  const logoScale   = useRef(new Animated.Value(0.5)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const nameOpacity = useRef(new Animated.Value(0)).current;
+  const nameSlide   = useRef(new Animated.Value(16)).current;
+  const tagOpacity  = useRef(new Animated.Value(0)).current;
+  const bgScale     = useRef(new Animated.Value(1.1)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      // 1. Logo blooms in
+      Animated.parallel([
+        Animated.spring(logoScale,   { toValue: 1,   tension: 55, friction: 7, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 1,   duration: 500, useNativeDriver: true }),
+        Animated.spring(bgScale,     { toValue: 1,   tension: 40, friction: 8, useNativeDriver: true }),
+      ]),
+      // 2. Name slides up
+      Animated.parallel([
+        Animated.timing(nameOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(nameSlide,   { toValue: 0, tension: 70, friction: 9, useNativeDriver: true }),
+      ]),
+      // 3. Tagline fades
+      Animated.timing(tagOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      // 4. Hold then navigate
+      Animated.delay(900),
+    ]).start(() => {
+      navigation.replace('Onboarding');
+    });
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Background circles for depth */}
+      <Animated.View style={[styles.bgCircle1, { transform: [{ scale: bgScale }] }]} />
+      <Animated.View style={[styles.bgCircle2, { transform: [{ scale: bgScale }] }]} />
+
+      {/* Logo */}
+      <Animated.View style={[styles.logoWrap, {
+        opacity: logoOpacity,
+        transform: [{ scale: logoScale }],
+      }]}>
+        <View style={styles.logoBg}>
+          <BloomLogo size={56} animate />
+        </View>
+      </Animated.View>
+
+      {/* Name */}
+      <Animated.Text style={[styles.name, {
+        opacity: nameOpacity,
+        transform: [{ translateY: nameSlide }],
+      }]}>
+        daya
+      </Animated.Text>
+
+      {/* Tagline */}
+      <Animated.Text style={[styles.tagline, { opacity: tagOpacity }]}>
+        your day, beautifully planned
+      </Animated.Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  bgCircle1: {
+    position: 'absolute',
+    width: width * 1.4,
+    height: width * 1.4,
+    borderRadius: width * 0.7,
+    backgroundColor: colors.mid,
+    opacity: 0.18,
+    top: -width * 0.5,
+  },
+  bgCircle2: {
+    position: 'absolute',
+    width: width,
+    height: width,
+    borderRadius: width * 0.5,
+    backgroundColor: colors.light,
+    opacity: 0.08,
+    bottom: -width * 0.3,
+  },
+  logoWrap: { alignItems: 'center' },
+  logoBg: {
+    width: 96,
+    height: 96,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  name: {
+    fontSize: 38,
+    fontFamily: fonts.display,
+    color: colors.white,
+    letterSpacing: 3,
+  },
+  tagline: {
+    fontSize: 14,
+    fontFamily: fonts.sans,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.5,
+  },
+});
